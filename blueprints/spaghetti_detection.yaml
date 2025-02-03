@@ -151,6 +151,7 @@ variables:
   PRINTER_CURRENT_STAGE_SENSOR_VAR: !input printer_current_stage_sensor
   PRINTER_DEVICE_SLUG_VAR: "{{device_attr(PRINTER_CURRENT_STAGE_SENSOR_VAR, 'name_by_user') or device_attr(PRINTER_CURRENT_STAGE_SENSOR_VAR, 'name')|slugify}}"  # this will be used to differentiate the created entities from those of other printers
   PRINTER_CURRENT_FRAME_NUMBER_VAR: "number.{{PRINTER_DEVICE_SLUG_VAR}}_spaghetti_detection_current_frame_number"
+  #PRINTER_CURRENT_FRAME_NUMBER_VAR: 'number.' ~ PRINTER_DEVICE_SLUG_VAR ~ '_spaghetti_detection_current_frame_number'
   PRINTER_DETECTION_EWM_MEAN_VAR: "number.{{PRINTER_DEVICE_SLUG_VAR}}_spaghetti_detection_ewm_mean"
   PRINTER_DETECTION_ROLLING_MEAN_SHORT_VAR: "number.{{PRINTER_DEVICE_SLUG_VAR}}_spaghetti_detection_rolling_mean_short"
   PRINTER_DETECTION_ROLLING_MEAN_LONG_VAR: "number.{{PRINTER_DEVICE_SLUG_VAR}}_spaghetti_detection_rolling_mean_long"
@@ -336,9 +337,9 @@ action:
 
           - if:
               - condition: numeric_state
-                entity_id: "{{PRINTER_CURRENT_FRAME_NUMBER_VAR}}"
-                below: 30
-            then:
+                entity_id: "{{PRINTER_CURRENT_FRAME_NUMBER_VAR}}"  ### *** ERROR HERE: Message malformed: Entity {{PRINTER_CURRENT_FRAME_NUMBER_VAR}} is neither a valid entity ID nor a valid UUID for dictionary value @ data['actions'][0]['choose'][2]['sequence'][10]['if'][0]['entity_id']
+                below: 30                                           # see: https://community.home-assistant.io/t/unknown-entity-when-using-a-variable-entity-id-in-blueprint/654329/7
+            then:                                                   # and: https://community.home-assistant.io/t/concatenate-entity-id-in-blueprint-for-service-call/628123/3
               - stop: ""
             alias: if current_frame_num < 30
 
