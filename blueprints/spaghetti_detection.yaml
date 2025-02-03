@@ -293,7 +293,7 @@ action:
                 target:
                   entity_id:
                     - !input printer_chamber_light
-          - service: spaghetti_detection.predict
+          - service: bambu_lab_p1_spaghetti_detection.predict
             data:
               obico_host: !input obico_host
               obico_auth_token: !input obico_auth_token
