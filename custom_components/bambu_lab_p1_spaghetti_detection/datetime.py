@@ -12,18 +12,18 @@ DATETIME_TYPES: tuple[DateTimeEntityDescription, ...] = (
 
 async def async_setup_entry(hass, entry, async_add_entities):
     entities = [
-        BambuLabP1SpaghettiDetectionDateTimeEntity(entity_description) for entity_description in DATETIME_TYPES
+        SpaghettiDetectionDateTimeEntity(entity_description) for entity_description in DATETIME_TYPES
     ]
 
     async_add_entities(entities)
 
 
-class BambuLabP1SpaghettiDetectionDateTimeEntity(DateTimeEntity):
+class SpaghettiDetectionDateTimeEntity(DateTimeEntity):
     def __init__(self, entity_description):
         self.entity_description = entity_description
 
-        self.entity_id = "number.bambu_lab_p1_spaghetti_detection_%s" % entity_description.key
-        self._attr_unique_id = "number.bambu_lab_p1_spaghetti_detection_%s" % entity_description.key
+        self.entity_id = "number.spaghetti_detection_%s" % entity_description.key
+        self._attr_unique_id = "number.spaghetti_detection_%s" % entity_description.key
         self._attr_native_value = datetime.fromtimestamp(0, timezone.utc)
 
     async def async_set_value(self, value: datetime) -> None:

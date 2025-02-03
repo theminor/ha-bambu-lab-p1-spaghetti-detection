@@ -1,8 +1,7 @@
-# Bambu Lab - Spaghetti Detection Integration
+# Home Assistant Spaghetti Detection Integration
 
-Upgrade your Bambu Lab 3D printer experience with the Home Assistant Spaghetti Detection Integration. This
-integration leverages the power of both the [Bambu Lab Integration](https://github.com/greghesp/ha-bambulab) and
-the [Obico](https://www.obico.io) ML server, providing a solution for detecting and handling spaghetti incidents during
+Upgrade your 3D printer experience with the Home Assistant Spaghetti Detection Integration. This
+integration leverages the power of the [Bambu Lab Integration](https://github.com/greghesp/ha-bambulab), the [Moonraker Integration](https://github.com/denkyem/home-assistant-moonraker), and the [Obico](https://www.obico.io) ML server, providing a solution for detecting and handling spaghetti incidents during
 your prints.
 
 If you like this automation and would like to support it, you can [buy me a coffee](https://www.patreon.com/nberk/shop).
@@ -15,18 +14,20 @@ If you like this automation and would like to support it, you can [buy me a coff
 - **Third Party Camera Support:** Any camera entity can also be used for detecting failures.
 
 ## Supported Printers
-| Device          | Compatibility | 
-|-----------------|---------------|
-| X1 Series       | ✔️          
-| P1 Series       | ✔️            
-| A1 Series       | ✔️             
+| Device           | Compatibility | 
+|------------------|---------------|
+| X1 Series        | ✔️
+| P1 Series        | ✔️
+| A1 Series        | ✔️
+| Klipper Printers | ✔️
 
 
 ## Prerequisites
 
 Ensure the following prerequisites are met before installing the Spaghetti Detection Integration:
 
-- [Bambu Lab Integration](https://github.com/greghesp/ha-bambulab) must be installed.
+- [Bambu Lab Integration](https://github.com/greghesp/ha-bambulab) must be installed if you are using a Bambu printer.
+- [Moonraker Integration](https://github.com/denkyem/home-assistant-moonraker) must be installed if you are using a Klipper printer.
 - A server with at least 4GB of RAM that meets the [Obico hardware requirements](https://www.obico.io/docs/server-guides/hardware-requirements/).
 
 <br>
@@ -34,7 +35,7 @@ Ensure the following prerequisites are met before installing the Spaghetti Detec
 > **_NOTE:_** The integration does **not** support the following devices:
 
 | Device | Compatibility | 
-| ---- | ----- |
+| ------ | ------------- |
 | Raspberry Pi (Any Model) | ❌
 | Home Assistant Green | ❌
 | Home Assistant Yellow | ❌
@@ -48,7 +49,7 @@ Follow these steps to set up the Spaghetti Detection Integration:
 1. **Install Obico ML Server**
     - Choose between installing it as a Home Assistant Addon or as a standalone Docker container.
 
-2. **Install `Bambu Lab P1 - Spaghetti Detection` Home Assistant Integration**
+2. **Install `Spaghetti Detection` Home Assistant Integration**
 3. **Install Home Assistant Spaghetti Detection Automation Blueprint**
 
 For detailed installation instructions and troubleshooting tips, refer to
@@ -77,12 +78,12 @@ To install Obico ML server as a Home Assistant Add-on you have 2 options:
          --restart unless-stopped \
          --env ML_API_TOKEN=obico_api_secret \
          --publish 3333:3333 \
-         --name ha_bambu_lab_p1_spaghetti_detection \
-         nberk/ha_bambu_lab_p1_spaghetti_detection_standalone:latest
+         --name ha_spaghetti_detection \
+         nberk/ha_spaghetti_detection_standalone:latest
 
 2. Start the container using the following command:
 
-       docker start ha_bambu_lab_p1_spaghetti_detection
+       docker start ha_spaghetti_detection
 
 ### Install Obico ML Server as a Standalone Docker Container with Docker Compose
 
@@ -108,7 +109,7 @@ To install Obico ML server as a Home Assistant Add-on you have 2 options:
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=nberktumer&repository=ha-bambu-lab-p1-spaghetti-detection&category=Integration)
 
-2. Go to **Settings → Devices & services → Add Integration** and add **Bambu Lab P1 - Spaghetti Detection** integration.
+2. Go to **Settings → Devices & services → Add Integration** and add **Spaghetti Detection** integration.
 
 ### Manual
 

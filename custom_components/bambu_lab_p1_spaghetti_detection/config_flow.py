@@ -6,7 +6,7 @@ from typing import Any
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 
-from custom_components.bambu_lab_p1_spaghetti_detection import DOMAIN
+from custom_components.spaghetti_detection import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,4 +17,4 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
             self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        return self.async_create_entry(title="Bambu Lab P1 - Spaghetti Detection", data={})
+        return self.async_create_entry(title="Spaghetti Detection", data={})

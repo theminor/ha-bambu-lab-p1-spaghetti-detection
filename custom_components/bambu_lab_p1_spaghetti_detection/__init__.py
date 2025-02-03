@@ -6,8 +6,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse
 
-DOMAIN = "bambu_lab_p1_spaghetti_detection"
-BRAND = "Bambu Lab P1 - Spaghetti Detection"
+DOMAIN = "spaghetti_detection"
+BRAND = "Spaghetti Detection"
 
 LOGGER = logging.getLogger(__package__)
 
@@ -21,7 +21,7 @@ SPAGHETTI_DETECTION_SCHEMA = vol.Schema({
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up the Bambu Lab P1 - Spaghetti Detection integration."""
+    """Set up the Spaghetti Detection integration."""
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def spaghetti_detection_handler(call: ServiceCall) -> ServiceResponse:
@@ -52,5 +52,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload Bambu Lab P1 - Spaghetti Detection integration."""
+    """Unload Spaghetti Detection integration."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
