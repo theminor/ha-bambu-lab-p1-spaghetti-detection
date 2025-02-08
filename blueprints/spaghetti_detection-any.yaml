@@ -1,16 +1,25 @@
 blueprint:
-  name: Bambu Lab - Spaghetti Detection
-  description: Bambu Lab - Spaghetti Detection
+  name: Klipper Printer - Spaghetti Detection
+  description: Spaghetti Detection for any Klipper Printer
   domain: automation
   input:
+    #printer_device:
+    #  name: Printer Device
+    #  description: Select the Bambu or Klipper printer device which will be monitored for spaghetti detection # this will be used to get the device ID
+    #  device:
+    #  selector:
+    #    entity:
+    #      integration:
+    #        - bambu_lab
+    #        - moonraker
     home_assistant_host:
       name: Home Assistant Host
       description: Home Assistant host
-      default: "http://192.168.1.123:8123"
+      default: "http://127.0.0.1:8123"
     obico_host:
       name: Obico ML API Host
       description: Obico ML API host
-      default: "http://192.168.1.123:3333"
+      default: "http://127.0.0.1:3333"
     obico_auth_token:
       name: Obico ML API Auth Token
       description: Obico ML API authentication token
@@ -77,62 +86,60 @@ blueprint:
       selector:
         text:
     printer_print_status_sensor:
-      name: Printer Print Status Sensor
-      description: Bambu Lab printer print status sensor
+      name: Print Status Sensor
+      description: Select the printer's Print Status Sensor (Bambu Printers) or Current Print State Sensor (Klipper Printers)
       selector:
         entity:
           filter:
-            - integration: bambu_lab
-              domain: sensor
+            - domain: sensor
               device_class: enum
     printer_current_stage_sensor:
-      name: Printer Current Stage Sensor
-      description: Bambu Lab printer current stage sensor
+      name: Current Stage Sensor
+      description: Select the printer's Current Stage Sensor (Bambu Printers) or Current Print State Sensor (Klipper Printers - same as above)
       selector:
         entity:
           filter:
-            - integration: bambu_lab
-              domain: sensor
+            - domain: sensor
               device_class: enum
     printer_camera:
-      name: Printer Camera Entity
-      description: Bambu Lab printer camera entity
+      name: Camera Entity
+      description: Select the camera entity which will be used for spaghetti detection
       selector:
         entity:
           filter:
             - domain: camera
     printer_pause_button:
-      name: Printer Pause Button Entity
-      description: Bambu Lab printer pause button entity
+      name: Pause Button Entity
+      description: Select the printer's pause button entity
       selector:
         entity:
           filter:
-            - integration: bambu_lab
-              domain: button
+            - domain: button
     printer_resume_button:
-      name: Printer Resume Button Entity
-      description: Bambu Lab printer resume button entity
+      name: Resume Button Entity
+      description: Select the printer's resume button entity
       selector:
         entity:
           filter:
-            - integration: bambu_lab
-              domain: button
+            - domain: button
     printer_stop_button:
-      name: Printer Stop Button Entity
-      description: Bambu Lab printer stop button entity
+      name: Stop Button Entity
+      description: Select the printer's stop (or cancel print) button entity
       selector:
         entity:
           filter:
-            - integration: bambu_lab
-              domain: button
+            - domain: button
     printer_chamber_light:
-      name: Printer Chamber Light
-      description: Bambu Lab printer chamber light
+      name: Light
+      description: Select the light entity which will optionally be turned on at print start
       selector:
         entity:
           filter:
-            - integration: bambu_lab
-              domain: light
+            - domain:
+              - light
+              - switch
+
+    ### TO DO: Add options to change Automoation calculation thresholds - see https://github.com/nberktumer/ha-bambu-lab-p1-spaghetti-detection/issues/2#issuecomment-1937766963
 
 variables:
   HOME_ASSISTANT_HOST_VAR: !input home_assistant_host
@@ -140,36 +147,50 @@ variables:
   FAILURE_ACTION_VAR: !input failure_action
   NOTIFICATION_SETTINGS_VAR: !input notification_settings
   DETECTION_FREQUENCY_VAR: !input detection_frequency
+  #PRINTER_DEVICE_VAR: !input printer_device
+  PRINTER_CURRENT_STAGE_SENSOR_VAR: !input printer_current_stage_sensor
+  PRINTER_DEVICE_SLUG_VAR: "{{device_attr(PRINTER_CURRENT_STAGE_SENSOR_VAR, 'name_by_user') or device_attr(PRINTER_CURRENT_STAGE_SENSOR_VAR, 'name')|slugify}}"  # this will be used to differentiate the created entities from those of other printers
+  PRINTER_CURRENT_FRAME_NUMBER_VAR: "number.{{PRINTER_DEVICE_SLUG_VAR}}_spaghetti_detection_current_frame_number"
+  #PRINTER_CURRENT_FRAME_NUMBER_VAR: 'number.' ~ PRINTER_DEVICE_SLUG_VAR ~ '_spaghetti_detection_current_frame_number'
+  PRINTER_DETECTION_EWM_MEAN_VAR: "number.{{PRINTER_DEVICE_SLUG_VAR}}_spaghetti_detection_ewm_mean"
+  PRINTER_DETECTION_ROLLING_MEAN_SHORT_VAR: "number.{{PRINTER_DEVICE_SLUG_VAR}}_spaghetti_detection_rolling_mean_short"
+  PRINTER_DETECTION_ROLLING_MEAN_LONG_VAR: "number.{{PRINTER_DEVICE_SLUG_VAR}}_spaghetti_detection_rolling_mean_long"
+  PRINTER_DETECTION_NORMALIZED_P_VAR: "number.{{PRINTER_DEVICE_SLUG_VAR}}_spaghetti_detection_normalized_p"
+  PRINTER_DETECTION_ADJUSTED_EWM_MEAN_VAR: "number.{{PRINTER_DEVICE_SLUG_VAR}}_spaghetti_detection_adjusted_ewm_mean"
+  PRINTER_DETECTION_P_SUM_VAR: "number.{{PRINTER_DEVICE_SLUG_VAR}}_spaghetti_detection_p_sum"
+  PRINTER_DETECTION_LIFETIME_FRAME_NUMBER_VAR: "number.{{PRINTER_DEVICE_SLUG_VAR}}_spaghetti_detection_lifetime_frame_number"
+  PRINTER_DETECTION_ROLLING_MEAN_DIFF_VAR: "number.{{PRINTER_DEVICE_SLUG_VAR}}_spaghetti_detection_rolling_mean_diff"
+  PRINTER_DETECTION_THRESH_WARNING_VAR: "number.{{PRINTER_DEVICE_SLUG_VAR}}_spaghetti_detection_thresh_warning"
+  PRINTER_DETECTION_THRESH_FAILURE_VAR: "number.{{PRINTER_DEVICE_SLUG_VAR}}_spaghetti_detection_thresh_failure"
+  PRINTER_DETECTION_P_VAR: "number.{{PRINTER_DEVICE_SLUG_VAR}}_spaghetti_detection_p"
+  PRINTER_DETECTION_LAST_NOTIFY_TIME_VAR: "datetime.{{PRINTER_DEVICE_SLUG_VAR}}_spaghetti_detection_last_notify_time"
+
 mode: single
 max_exceeded: silent
 trigger:
-  # Print start trigger
   - platform: state
     entity_id:
       - !input printer_current_stage_sensor
     to: printing
-    id: BAMBU_LAB_PRINTER_STAGE_CHANGE
-
-  # Notification action triggers
+    id: PRINTER_STATE_CHANGE
   - platform: event
     event_type: mobile_app_notification_action
-    id: BAMBU_LAB_PAUSE_PRINTING
+    id: PAUSE_PRINTING
     event_data:
-      action: BAMBU_LAB_PAUSE_PRINTING
+      action: PAUSE_PRINTING
   - platform: event
     event_type: mobile_app_notification_action
-    id: BAMBU_LAB_RESUME_PRINTING
+    id: RESUME_PRINTING
     event_data:
-      action: BAMBU_LAB_RESUME_PRINTING
+      action: RESUME_PRINTING
   - platform: event
     event_type: mobile_app_notification_action
-    id: BAMBU_LAB_STOP_PRINTING
+    id: STOP_PRINTING
     event_data:
-      action: BAMBU_LAB_STOP_PRINTING
-
+      action: STOP_PRINTING
   # Detection trigger
   - trigger: time_pattern
-    id: BAMBU_LAB_DETECTION_TRIGGER
+    id: DETECTION_TRIGGER
     seconds: !input detection_frequency
 condition: [ ]
 action:
@@ -177,20 +198,20 @@ action:
       # Print start actions
       - conditions:
           - condition: trigger
-            id: BAMBU_LAB_PRINTER_STAGE_CHANGE
+            id: PRINTER_STATE_CHANGE
         sequence:
           - service: number.set_value
             data:
               value: 0
             target:
               entity_id:
-                - number.bambu_lab_p1_spaghetti_detection_current_frame_number
-                - number.bambu_lab_p1_spaghetti_detection_ewm_mean
-                - number.bambu_lab_p1_spaghetti_detection_rolling_mean_short
-                - number.bambu_lab_p1_spaghetti_detection_rolling_mean_long
-                - number.bambu_lab_p1_spaghetti_detection_normalized_p
-                - number.bambu_lab_p1_spaghetti_detection_adjusted_ewm_mean
-                - number.bambu_lab_p1_spaghetti_detection_p_sum
+                - "{{PRINTER_CURRENT_FRAME_NUMBER_VAR}}"
+                - "{{PRINTER_DETECTION_EWM_MEAN_VAR}}"
+                - "{{PRINTER_DETECTION_ROLLING_MEAN_SHORT_VAR}}"
+                - "{{PRINTER_DETECTION_ROLLING_MEAN_LONG_VAR}}"
+                - "{{PRINTER_DETECTION_NORMALIZED_P_VAR}}"
+                - "{{PRINTER_DETECTION_ADJUSTED_EWM_MEAN_VAR}}"
+                - "{{PRINTER_DETECTION_P_SUM_VAR}}"
           - if:
             - condition: and
               conditions:
@@ -209,15 +230,15 @@ action:
       - conditions:
           - condition: trigger
             id:
-              - BAMBU_LAB_PAUSE_PRINTING
-              - BAMBU_LAB_RESUME_PRINTING
-              - BAMBU_LAB_STOP_PRINTING
+              - PAUSE_PRINTING
+              - RESUME_PRINTING
+              - STOP_PRINTING
         sequence:
           - choose:
               - conditions:
                   - condition: trigger
                     id:
-                      - BAMBU_LAB_PAUSE_PRINTING
+                      - PAUSE_PRINTING
                 sequence:
                   - service: button.press
                     data: { }
@@ -225,7 +246,7 @@ action:
                       entity_id: !input printer_pause_button
               - conditions:
                   - condition: trigger
-                    id: BAMBU_LAB_RESUME_PRINTING
+                    id: RESUME_PRINTING
                 sequence:
                   - service: button.press
                     data: { }
@@ -233,7 +254,7 @@ action:
                       entity_id: !input printer_resume_button
               - conditions:
                   - condition: trigger
-                    id: BAMBU_LAB_STOP_PRINTING
+                    id: STOP_PRINTING
                 sequence:
                   - service: button.press
                     data: { }
@@ -243,14 +264,15 @@ action:
       # Notification actions
       - conditions:
           - condition: trigger
-            id: BAMBU_LAB_DETECTION_TRIGGER
+            id: DETECTION_TRIGGER
         sequence:
           - if:
               - condition: not
                 conditions:
                   - condition: state
                     entity_id: !input printer_print_status_sensor
-                    state: running
+                    # state: running
+                    state: printing
             then:
               - stop: ""
           - if:
@@ -282,115 +304,121 @@ action:
             data:
               value: "{{ result.result.detections | map(attribute=1) | sum | float }}"
             target:
-              entity_id: number.bambu_lab_p1_spaghetti_detection_p_sum
+              entity_id: "{{PRINTER_DETECTION_P_SUM_VAR}}"
 
           - service: number.set_value
             data:
-              value: "{{ states('number.bambu_lab_p1_spaghetti_detection_current_frame_number') | float + 1 }}"
+              value: "{{ states('PRINTER_CURRENT_FRAME_NUMBER_VAR') | float + 1 }}"
             target:
-              entity_id: number.bambu_lab_p1_spaghetti_detection_current_frame_number
+              entity_id: "{{PRINTER_CURRENT_FRAME_NUMBER_VAR}}"
 
           - service: number.set_value
             data:
-              value: "{{ states('number.bambu_lab_p1_spaghetti_detection_lifetime_frame_number') | float + 1 }}"
+              value: "{{ states('PRINTER_DETECTION_LIFETIME_FRAME_NUMBER_VAR') | float + 1 }}"
             target:
-              entity_id: number.bambu_lab_p1_spaghetti_detection_lifetime_frame_number
+              entity_id: "{{PRINTER_DETECTION_LIFETIME_FRAME_NUMBER_VAR}}"
 
           - service: number.set_value
             data:
-              value: "{{ (states('number.bambu_lab_p1_spaghetti_detection_p_sum') | float) * (2 / (12 + 1)) + (states('number.bambu_lab_p1_spaghetti_detection_ewm_mean') | float) * (1 - (2 / (12 + 1))) }}"
+              value: "{{ (states('PRINTER_DETECTION_P_SUM_VAR') | float) * (2 / (12 + 1)) + (states('PRINTER_DETECTION_EWM_MEAN_VAR') | float) * (1 - (2 / (12 + 1))) }}"
             target:
-              entity_id: number.bambu_lab_p1_spaghetti_detection_ewm_mean
+              entity_id: "{{PRINTER_DETECTION_EWM_MEAN_VAR}}"
 
           - service: number.set_value
             data:
-              value: "{{ (states('number.bambu_lab_p1_spaghetti_detection_rolling_mean_short') | float) + ((states('number.bambu_lab_p1_spaghetti_detection_p_sum') | float) - (states('number.bambu_lab_p1_spaghetti_detection_rolling_mean_short') | float)) / (310 if 310 <= (states('number.bambu_lab_p1_spaghetti_detection_current_frame_number') | float) else (states('number.bambu_lab_p1_spaghetti_detection_current_frame_number') | float) + 1) }}"
+              value: "{{ (states('PRINTER_DETECTION_ROLLING_MEAN_SHORT_VAR') | float) + ((states('PRINTER_DETECTION_P_SUM_VAR') | float) - (states('PRINTER_DETECTION_ROLLING_MEAN_SHORT_VAR') | float)) / (310 if 310 <= (states('PRINTER_CURRENT_FRAME_NUMBER_VAR') | float) else (states('PRINTER_CURRENT_FRAME_NUMBER_VAR') | float) + 1) }}"
             target:
-              entity_id: number.bambu_lab_p1_spaghetti_detection_rolling_mean_short
+              entity_id: "{{PRINTER_DETECTION_ROLLING_MEAN_SHORT_VAR}}"
 
           - service: number.set_value
             data:
-              value: "{{ (states('number.bambu_lab_p1_spaghetti_detection_rolling_mean_long') | float) + ((states('number.bambu_lab_p1_spaghetti_detection_p_sum') | float) - (states('number.bambu_lab_p1_spaghetti_detection_rolling_mean_long') | float)) / (7200 if 7200 <= (states('number.bambu_lab_p1_spaghetti_detection_lifetime_frame_number') | float) else (states('number.bambu_lab_p1_spaghetti_detection_lifetime_frame_number') | float) + 1) }}"
-              entity_id: number.bambu_lab_p1_spaghetti_detection_rolling_mean_long
+              value: "{{ (states('PRINTER_DETECTION_ROLLING_MEAN_LONG_VAR') | float) + ((states('PRINTER_DETECTION_P_SUM_VAR') | float) - (states('PRINTER_DETECTION_ROLLING_MEAN_LONG_VAR') | float)) / (7200 if 7200 <= (states('PRINTER_DETECTION_LIFETIME_FRAME_NUMBER_VAR') | float) else (states('PRINTER_DETECTION_LIFETIME_FRAME_NUMBER_VAR') | float) + 1) }}"
+              entity_id: "{{PRINTER_DETECTION_ROLLING_MEAN_LONG_VAR}}"
 
+          #- if:
+          #    - condition: numeric_state
+          #      entity_id: "{{PRINTER_CURRENT_FRAME_NUMBER_VAR}}"  ### *** ERROR HERE: Message malformed: Entity {{PRINTER_CURRENT_FRAME_NUMBER_VAR}} is neither a valid entity ID nor a valid UUID for dictionary value @ data['actions'][0]['choose'][2]['sequence'][10]['if'][0]['entity_id']
+          #      below: 30                                           # see: https://community.home-assistant.io/t/unknown-entity-when-using-a-variable-entity-id-in-blueprint/654329/7
+          #  then:                                                   # and: https://community.home-assistant.io/t/concatenate-entity-id-in-blueprint-for-service-call/628123/3
+          #    - stop: ""
+          #  alias: if current_frame_num < 30
+          #alias: if current_frame_num < 30
           - if:
-              - condition: numeric_state
-                entity_id: number.bambu_lab_p1_spaghetti_detection_current_frame_number
-                below: 30
+              - condition: template
+                value_template: "{{PRINTER_CURRENT_FRAME_NUMBER_VAR}} < 30"
             then:
               - stop: ""
-            alias: if current_frame_num < 30
 
           - service: number.set_value
             data:
               value: >-
-                {{ (states('number.bambu_lab_p1_spaghetti_detection_ewm_mean') | float) - (states('number.bambu_lab_p1_spaghetti_detection_rolling_mean_long') | float) }}
+                {{ (states('PRINTER_DETECTION_EWM_MEAN_VAR') | float) - (states('PRINTER_DETECTION_ROLLING_MEAN_LONG_VAR') | float) }}
             target:
-              entity_id: number.bambu_lab_p1_spaghetti_detection_adjusted_ewm_mean
+              entity_id: "{{PRINTER_DETECTION_ADJUSTED_EWM_MEAN_VAR}}"
 
           - service: number.set_value
             data:
               value: >-
-                {{ ((states('number.bambu_lab_p1_spaghetti_detection_rolling_mean_short') | float) - (states('number.bambu_lab_p1_spaghetti_detection_rolling_mean_long') | float)) * 3.8 }}
+                {{ ((states('PRINTER_DETECTION_ROLLING_MEAN_SHORT_VAR') | float) - (states('PRINTER_DETECTION_ROLLING_MEAN_LONG_VAR') | float)) * 3.8 }}
             target:
-              entity_id: number.bambu_lab_p1_spaghetti_detection_rolling_mean_diff
+              entity_id: "{{PRINTER_DETECTION_ROLLING_MEAN_DIFF_VAR}}"
 
           - service: number.set_value
             data:
               value: >-
-                {{ min(0.78, max(0.33, (states('number.bambu_lab_p1_spaghetti_detection_rolling_mean_diff') | float))) }}
+                {{ min(0.78, max(0.33, (states('PRINTER_DETECTION_ROLLING_MEAN_DIFF_VAR') | float))) }}
             target:
-              entity_id: number.bambu_lab_p1_spaghetti_detection_thresh_warning
+              entity_id: "{{PRINTER_DETECTION_THRESH_WARNING_VAR}}"
 
           - service: number.set_value
             data:
               value: >-
-                {{ (states('number.bambu_lab_p1_spaghetti_detection_thresh_warning') | float) * 1.75 }}
+                {{ (states('PRINTER_DETECTION_THRESH_WARNING_VAR') | float) * 1.75 }}
             target:
-              entity_id: number.bambu_lab_p1_spaghetti_detection_thresh_failure
+              entity_id: "{{PRINTER_DETECTION_THRESH_FAILURE_VAR}}"
 
           - service: number.set_value
             data:
               value: >-
-                {{ (states('number.bambu_lab_p1_spaghetti_detection_ewm_mean') | float) - (states('number.bambu_lab_p1_spaghetti_detection_rolling_mean_long') | float) }}
+                {{ (states('PRINTER_DETECTION_EWM_MEAN_VAR') | float) - (states('PRINTER_DETECTION_ROLLING_MEAN_LONG_VAR') | float) }}
             target:
-              entity_id: number.bambu_lab_p1_spaghetti_detection_p
+              entity_id: "{{PRINTER_DETECTION_P_VAR}}"
 
           - choose:
               - conditions:
                   - condition: numeric_state
-                    entity_id: number.bambu_lab_p1_spaghetti_detection_p
-                    above: number.bambu_lab_p1_spaghetti_detection_thresh_failure
+                    entity_id: "{{PRINTER_DETECTION_P_VAR}}"
+                    above: "{{PRINTER_DETECTION_THRESH_FAILURE_VAR}}"
                 sequence:
                   - service: number.set_value
                     data:
                       value: >-
-                        {{ min(1.0, max(2.0 / 3.0, ((((states('number.bambu_lab_p1_spaghetti_detection_p') | float) - (states('number.bambu_lab_p1_spaghetti_detection_thresh_failure') | float)) * (1.0 - 2.0 / 3.0)) / ((states('number.bambu_lab_p1_spaghetti_detection_thresh_failure') | float) * 1.5 - (states('number.bambu_lab_p1_spaghetti_detection_thresh_failure') | float))) + 2.0 / 3.0)) }}
+                        {{ min(1.0, max(2.0 / 3.0, ((((states('PRINTER_DETECTION_P_VAR') | float) - (states('PRINTER_DETECTION_THRESH_FAILURE_VAR') | float)) * (1.0 - 2.0 / 3.0)) / ((states('PRINTER_DETECTION_THRESH_FAILURE_VAR') | float) * 1.5 - (states('PRINTER_DETECTION_THRESH_FAILURE_VAR') | float))) + 2.0 / 3.0)) }}
                     target:
-                      entity_id: number.bambu_lab_p1_spaghetti_detection_normalized_p
+                      entity_id: "{{PRINTER_DETECTION_NORMALIZED_P_VAR}}"
               - conditions:
                   - condition: numeric_state
-                    entity_id: number.bambu_lab_p1_spaghetti_detection_p
-                    above: number.bambu_lab_p1_spaghetti_detection_thresh_warning
+                    entity_id: "{{PRINTER_DETECTION_P_VAR}}"
+                    above: "{{PRINTER_DETECTION_THRESH_WARNING_VAR}}"
                 sequence:
                   - service: number.set_value
                     data:
                       value: >-
-                        {{ min(2.0 / 3.0, max(1.0 / 3.0, ((((states('number.bambu_lab_p1_spaghetti_detection_p') | float) - (states('number.bambu_lab_p1_spaghetti_detection_thresh_warning') | float)) * (2.0 / 3.0 - 1.0 / 3.0)) / ((states('number.bambu_lab_p1_spaghetti_detection_thresh_failure') | float) - (states('number.bambu_lab_p1_spaghetti_detection_thresh_warning') | float))) + 1.0 / 3.0)) }}
+                        {{ min(2.0 / 3.0, max(1.0 / 3.0, ((((states('PRINTER_DETECTION_P_VAR') | float) - (states('PRINTER_DETECTION_THRESH_WARNING_VAR') | float)) * (2.0 / 3.0 - 1.0 / 3.0)) / ((states('PRINTER_DETECTION_THRESH_FAILURE_VAR') | float) - (states('PRINTER_DETECTION_THRESH_WARNING_VAR') | float))) + 1.0 / 3.0)) }}
                     target:
-                      entity_id: number.bambu_lab_p1_spaghetti_detection_normalized_p
+                      entity_id: "{{PRINTER_DETECTION_NORMALIZED_P_VAR}}"
             default:
               - service: number.set_value
                 data:
                   value: >-
-                    {{ min(1.0 / 3.0, max(0, ((states('number.bambu_lab_p1_spaghetti_detection_p') | float) * 1.0 / 3.0) / (states('number.bambu_lab_p1_spaghetti_detection_thresh_warning') | float))) }}
+                    {{ min(1.0 / 3.0, max(0, ((states('PRINTER_DETECTION_P_VAR') | float) * 1.0 / 3.0) / (states('PRINTER_DETECTION_THRESH_WARNING_VAR') | float))) }}
                 target:
-                  entity_id: number.bambu_lab_p1_spaghetti_detection_normalized_p
+                  entity_id: "{{PRINTER_DETECTION_NORMALIZED_P_VAR}}"
 
           # if adjusted_ewm_mean < THRESHOLD_LOW
           - if:
               - condition: numeric_state
-                entity_id: number.bambu_lab_p1_spaghetti_detection_adjusted_ewm_mean
+                entity_id: "{{PRINTER_DETECTION_ADJUSTED_EWM_MEAN_VAR}}"
                 below: 0.38
             then:
               - stop: ""
@@ -400,11 +428,11 @@ action:
               - condition: and
                 conditions:
                   - condition: numeric_state
-                    entity_id: number.bambu_lab_p1_spaghetti_detection_adjusted_ewm_mean
+                    entity_id: "{{PRINTER_DETECTION_ADJUSTED_EWM_MEAN_VAR}}"
                     below: 0.78
                   - condition: numeric_state
-                    entity_id: number.bambu_lab_p1_spaghetti_detection_adjusted_ewm_mean
-                    below: number.bambu_lab_p1_spaghetti_detection_rolling_mean_diff
+                    entity_id: "{{PRINTER_DETECTION_ADJUSTED_EWM_MEAN_VAR}}"
+                    below: "{{PRINTER_DETECTION_ROLLING_MEAN_DIFF_VAR}}"
             then:
               - stop: ""
 
@@ -412,7 +440,7 @@ action:
           - if:
               - condition: template
                 value_template: >-
-                  {{ now() - states('datetime.bambu_lab_p1_spaghetti_detection_last_notify_time') | as_datetime | as_local < timedelta(minutes=1) }}
+                  {{ now() - states('PRINTER_DETECTION_LAST_NOTIFY_TIME_VAR') | as_datetime | as_local < timedelta(minutes=1) }}
             then:
               - stop: ""
             alias: >-
@@ -443,8 +471,8 @@ action:
                 sequence:
                   - service: !input notification_service
                     data:
-                      title: "Bambu Lab - Spaghetti Detected"
-                      message: "Confidence: {{ (states('number.bambu_lab_p1_spaghetti_detection_normalized_p') | float * 100) | int }}%"
+                      title: "Spaghetti Detected"
+                      message: "Confidence: {{ (states('PRINTER_DETECTION_NORMALIZED_P_VAR') | float * 100) | int }}%"
                       data:
                         image: "{{ HOME_ASSISTANT_HOST_VAR }}{{ state_attr(PRINTER_CAMERA_VAR, 'entity_picture') }}"
                         ttl: 0
@@ -456,9 +484,9 @@ action:
                             critical: 1
                             volume: 0.75
                         actions:
-                          - action: BAMBU_LAB_RESUME_PRINTING
+                          - action: RESUME_PRINTING
                             title: Resume Printing
-                          - action: BAMBU_LAB_STOP_PRINTING
+                          - action: STOP_PRINTING
                             title: Stop Printing
               - conditions:
                   - condition: template
@@ -466,30 +494,30 @@ action:
                 sequence:
                   - service: !input notification_service
                     data:
-                      title: "Bambu Lab - Spaghetti Detected"
-                      message: "Confidence: {{ (states('number.bambu_lab_p1_spaghetti_detection_normalized_p') | float * 100) | int }}%"
+                      title: "Spaghetti Detected"
+                      message: "Confidence: {{ (states('PRINTER_DETECTION_NORMALIZED_P_VAR') | float * 100) | int }}%"
                       data:
                         image: "{{ HOME_ASSISTANT_HOST_VAR }}{{ state_attr(PRINTER_CAMERA_VAR, 'entity_picture') }}"
                         actions:
-                          - action: BAMBU_LAB_RESUME_PRINTING
+                          - action: RESUME_PRINTING
                             title: Resume Printing
-                          - action: BAMBU_LAB_STOP_PRINTING
+                          - action: STOP_PRINTING
                             title: Stop Printing
           - service: number.set_value
             data:
               value: 0
             target:
               entity_id:
-                - number.bambu_lab_p1_spaghetti_detection_current_frame_number
-                - number.bambu_lab_p1_spaghetti_detection_ewm_mean
-                - number.bambu_lab_p1_spaghetti_detection_rolling_mean_short
-                - number.bambu_lab_p1_spaghetti_detection_rolling_mean_long
-                - number.bambu_lab_p1_spaghetti_detection_normalized_p
-                - number.bambu_lab_p1_spaghetti_detection_adjusted_ewm_mean
-                - number.bambu_lab_p1_spaghetti_detection_p_sum
+                - "{{PRINTER_CURRENT_FRAME_NUMBER_VAR}}"
+                - "{{PRINTER_DETECTION_EWM_MEAN_VAR}}"
+                - "{{PRINTER_DETECTION_ROLLING_MEAN_SHORT_VAR}}"
+                - "{{PRINTER_DETECTION_ROLLING_MEAN_LONG_VAR}}"
+                - "{{PRINTER_DETECTION_NORMALIZED_P_VAR}}"
+                - "{{PRINTER_DETECTION_ADJUSTED_EWM_MEAN_VAR}}"
+                - "{{PRINTER_DETECTION_P_SUM_VAR}}"
           - service: datetime.set_value
             data:
               datetime: >-
                 {{ now() }}
             target:
-              entity_id: datetime.bambu_lab_p1_spaghetti_detection_last_notify_time
+              entity_id: "{{PRINTER_DETECTION_LAST_NOTIFY_TIME_VAR}}"
