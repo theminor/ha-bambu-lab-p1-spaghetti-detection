@@ -1,6 +1,6 @@
 {
-  "domain": "spaghetti_detection",
-  "name": "Spaghetti Detection",
+  "domain": "bambu_lab_p1_spaghetti_detection",
+  "name": "Bambu Lab P1 - Spaghetti Detection",
   "codeowners": [
     "@nberktumer"
   ],

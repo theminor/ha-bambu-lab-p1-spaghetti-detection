@@ -11,13 +11,14 @@ BRAND = "Bambu Lab P1 - Spaghetti Detection"
 
 LOGGER = logging.getLogger(__package__)
 
-PLATFORMS = [Platform.NUMBER, Platform.DATETIME]
+PLATFORMS = [Platform.NUMBER, Platform.DATETIME, Platform.CAMERA]
 
 SPAGHETTI_DETECTION_SCHEMA = vol.Schema({
     vol.Required("obico_host"): str,
     vol.Required("obico_auth_token"): str,
     vol.Required("image_url"): str,
 })
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Bambu Lab P1 - Spaghetti Detection integration."""
@@ -48,6 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     return True
+
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Bambu Lab P1 - Spaghetti Detection integration."""

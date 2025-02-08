@@ -85,19 +85,21 @@ NUMBER_TYPES: tuple[NumberEntityDescription, ...] = (
     ),
 )
 
+
 async def async_setup_entry(hass, entry, async_add_entities):
     entities = [
-        BambuLabP1SpaghettiDetectionNumberEntity(entity_description, entry.title) for entity_description in NUMBER_TYPES
+        BambuLabP1SpaghettiDetectionNumberEntity(entity_description) for entity_description in NUMBER_TYPES
     ]
 
     async_add_entities(entities)
 
+
 class BambuLabP1SpaghettiDetectionNumberEntity(NumberEntity):
-    def __init__(self, entity_description, entry_title):
+    def __init__(self, entity_description):
         self.entity_description = entity_description
 
-        self.entity_id = f"number.spaghetti_detection_{entry_title}_{entity_description.key}"
-        self._attr_unique_id = f"number.spaghetti_detection_{entry_title}_{entity_description.key}"
+        self.entity_id = "number.bambu_lab_p1_spaghetti_detection_%s" % entity_description.key
+        self._attr_unique_id = "number.bambu_lab_p1_spaghetti_detection_%s" % entity_description.key
         if self._attr_native_value is None:
             self._attr_native_value = 0
 
