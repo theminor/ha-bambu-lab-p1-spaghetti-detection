@@ -38,7 +38,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             async with session.get(f"{obico_host}/p/?img={image_url}",
                                    headers={"Authorization": f"Bearer {obico_auth_token}"}) as response:
                 result = await response.json()
-                
+
+        # Update the camera entity with the full result
+        camera = hass.data[DOMAIN].get("camera")
+        if camera:
+            camera.update_detection_result(result)
+
         return {"result": result}
 
     hass.services.async_register(
