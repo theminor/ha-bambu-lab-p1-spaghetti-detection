@@ -4,7 +4,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse
-from homeassistant.helpers.entity_component import async_update_entity
 
 DOMAIN = "bambu_lab_p1_spaghetti_detection"
 BRAND = "Bambu Lab P1 - Spaghetti Detection"
@@ -38,14 +37,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async with aiohttp.ClientSession() as session:
             async with session.get(f"{obico_host}/p/?img={image_url}",
                                    headers={"Authorization": f"Bearer {obico_auth_token}"}) as response:
-                image_data = await response.read()
                 result = await response.json()
-
-        # Update the camera entity with the image data
-        camera_entity = hass.data[DOMAIN]["camera"]
-        camera_entity.update_image(image_data)
-        await async_update_entity(hass, "camera.spaghetti_detection_camera")
-
+                
         return {"result": result}
 
     hass.services.async_register(
