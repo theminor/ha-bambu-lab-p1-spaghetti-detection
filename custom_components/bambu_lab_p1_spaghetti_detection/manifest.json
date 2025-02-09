@@ -15,5 +15,5 @@
     "numpy>=1.23.0"
   ],
   "integration_type": "hub",
-  "platforms": ["camera", "number", "datetime", "switch"]
+  "platforms": ["camera", "number", "datetime", "switch", "sensor"]
 }

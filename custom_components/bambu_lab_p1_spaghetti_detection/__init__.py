@@ -12,7 +12,7 @@ BRAND = "Bambu Lab P1 - Spaghetti Detection"
 
 LOGGER = logging.getLogger(__package__)
 
-PLATFORMS = [Platform.NUMBER, Platform.DATETIME, Platform.CAMERA, Platform.SWITCH]
+PLATFORMS = [Platform.NUMBER, Platform.DATETIME, Platform.CAMERA, Platform.SWITCH, Platform.SENSOR]
 
 SPAGHETTI_DETECTION_SCHEMA = vol.Schema({
     vol.Required("obico_host"): str,
@@ -46,6 +46,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         camera = hass.data[DOMAIN].get("camera")
         if camera:
             camera.update_detection_result(result)
+
+        # Update the failure detection sensor state
+        sensor = hass.data[DOMAIN].get("failure_detection_sensor")
+        if sensor:
+            detection_result = result.get("result", {}).get("detection_result", "None")
+            sensor.update_state(detection_result)
 
         return {"result": result}
 

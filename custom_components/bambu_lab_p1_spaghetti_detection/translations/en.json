@@ -33,6 +33,10 @@
     "switch.spaghetti_detection_active": {
       "name": "Spaghetti Detection Active",
       "description": "Switch to activate or deactivate spaghetti detection"
+    },
+    "sensor.failure_detection_result": {
+      "name": "Failure Detection Result",
+      "description": "Sensor to show the failure detection result (None, Warning, Failure)"
     }
   }
 }
