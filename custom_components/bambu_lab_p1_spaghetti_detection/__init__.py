@@ -21,6 +21,9 @@ SPAGHETTI_DETECTION_SCHEMA = vol.Schema({
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Bambu Lab P1 - Spaghetti Detection integration."""
+    camera_entity_id = entry.data["camera_entity"]
+    hass.data[DOMAIN] = {"camera_entity_id": camera_entity_id}
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def spaghetti_detection_handler(call: ServiceCall) -> ServiceResponse:
@@ -54,7 +57,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     return True
-
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Bambu Lab P1 - Spaghetti Detection integration."""
