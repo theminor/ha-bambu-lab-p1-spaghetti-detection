@@ -4,7 +4,8 @@
       "user": {
         "data": {
           "camera_entity": "Select Camera Entity",
-          "update_interval": "Update Interval (seconds)"
+          "update_interval": "Update Interval (seconds)",
+          "obico_ml_api_host": "Obico ML API Host"
         }
       }
     }

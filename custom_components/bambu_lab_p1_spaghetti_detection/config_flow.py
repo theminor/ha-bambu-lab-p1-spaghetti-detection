@@ -23,6 +23,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema({
                 vol.Required("camera_entity"): selector({"entity": {"domain": "camera"}}),
-                vol.Optional("update_interval", default=60): vol.All(vol.Coerce(int), vol.Range(min=10))
+                vol.Optional("update_interval", default=60): vol.All(vol.Coerce(int), vol.Range(min=10)),
+                vol.Optional("obico_ml_api_host", default="http://127.0.0.1:3333"): str,
             })
         )
