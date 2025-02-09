@@ -3,10 +3,6 @@ from datetime import datetime, timezone
 from homeassistant.components.datetime import DateTimeEntity, DateTimeEntityDescription
 
 DATETIME_TYPES: tuple[DateTimeEntityDescription, ...] = (
-    #DateTimeEntityDescription(
-    #    key="last_notify_time",
-    #    name="Spaghetti Detection - Last Notify Time"
-    #),
 )
 
 
