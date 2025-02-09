@@ -3,11 +3,11 @@
     "step": {
       "user": {
         "data": {
-          "camera_entity": "Select Camera Entity",
+          "camera_entity": "Camera Entity",
           "update_interval": "Update Interval (seconds)",
-          "obico_ml_api_host": "Obico ML API Host",
-          "obico_ml_api_token": "Obico ML API Token",
-          "printer_device": "Select Printer Device (created from the Bambu Lab or Moonraker Addons)"
+          "obico_ml_api_host": "Obico Addon Host address (including port)",
+          "obico_ml_api_token": "Obico Addon API Token",
+          "printer_device": "Printer to Monitor"
         }
       }
     }

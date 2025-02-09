@@ -29,10 +29,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({
-                vol.Required("camera_entity"): selector({"entity": {"domain": "camera"}}),
-                vol.Optional("update_interval", default=60): vol.All(vol.Coerce(int), vol.Range(min=10)),
-                vol.Optional("obico_ml_api_host", default="http://127.0.0.1:3333"): str,
-                vol.Optional("obico_ml_api_token", default="obico_api_secret"): str,
-                vol.Required("printer_device"): vol.In({device_id: device_name for device_id, device_name in devices}),
+                vol.Required("camera_entity", description="Camera Entity"): selector({"entity": {"domain": "camera"}}),
+                vol.Optional("update_interval", default=30, description="Update Interval (seconds)"): vol.All(vol.Coerce(int), vol.Range(min=5)),
+                vol.Optional("obico_ml_api_host", default="http://127.0.0.1:3333", description="Obico Addon Host address (including port)"): str,
+                vol.Optional("obico_ml_api_token", default="obico_api_secret", description="Obico Addon API Token"): str,
+                vol.Required("printer_device", description="Printer to Monitor"): vol.In({device_id: device_name for device_id, device_name in devices}),
             })
         )

@@ -24,6 +24,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Bambu Lab P1 - Spaghetti Detection integration."""
     camera_entity_id = entry.data["camera_entity"]
     update_interval = entry.data.get("update_interval", 60)
+    obico_ml_api_host = entry.data.get("obico_ml_api_host", "http://127.0.0.1:3333")
+    obico_ml_api_token = entry.data.get("obico_ml_api_token", "obico_api_secret")
+    printer_device = entry.data["printer_device"]
     hass.data[DOMAIN] = {"camera_entity_id": camera_entity_id, "update_interval": update_interval, "active": False}
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
