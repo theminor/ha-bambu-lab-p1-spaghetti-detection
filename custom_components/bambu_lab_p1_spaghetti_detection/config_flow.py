@@ -22,6 +22,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({
-                vol.Required("camera_entity"): selector({"entity": {"domain": "camera"}})
+                vol.Required("camera_entity"): selector({"entity": {"domain": "camera"}}),
+                vol.Optional("update_interval", default=60): vol.All(vol.Coerce(int), vol.Range(min=10))
             })
         )

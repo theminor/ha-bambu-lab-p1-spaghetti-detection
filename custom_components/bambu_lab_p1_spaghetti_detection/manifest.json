@@ -13,5 +13,7 @@
   "requirements": [
     "Pillow>=8.0.0",
     "numpy>=1.23.0"
-  ]
+  ],
+  "integration_type": "hub",
+  "platforms": ["camera", "number", "datetime", "switch"]
 }

@@ -3,7 +3,8 @@
     "step": {
       "user": {
         "data": {
-          "camera_entity": "Select Camera Entity"
+          "camera_entity": "Select Camera Entity",
+          "update_interval": "Update Interval (seconds)"
         }
       }
     }
@@ -26,6 +27,12 @@
           "description": "Image URL"
         }
       }
+    }
+  },
+  "entities": {
+    "switch.spaghetti_detection_active": {
+      "name": "Spaghetti Detection Active",
+      "description": "Switch to activate or deactivate spaghetti detection"
     }
   }
 }

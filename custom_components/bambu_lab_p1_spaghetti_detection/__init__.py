@@ -4,13 +4,15 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse
+from homeassistant.helpers.event import async_track_time_interval
+from datetime import timedelta
 
 DOMAIN = "bambu_lab_p1_spaghetti_detection"
 BRAND = "Bambu Lab P1 - Spaghetti Detection"
 
 LOGGER = logging.getLogger(__package__)
 
-PLATFORMS = [Platform.NUMBER, Platform.DATETIME, Platform.CAMERA]
+PLATFORMS = [Platform.NUMBER, Platform.DATETIME, Platform.CAMERA, Platform.SWITCH]
 
 SPAGHETTI_DETECTION_SCHEMA = vol.Schema({
     vol.Required("obico_host"): str,
@@ -21,7 +23,8 @@ SPAGHETTI_DETECTION_SCHEMA = vol.Schema({
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Bambu Lab P1 - Spaghetti Detection integration."""
     camera_entity_id = entry.data["camera_entity"]
-    hass.data[DOMAIN] = {"camera_entity_id": camera_entity_id}
+    update_interval = entry.data.get("update_interval", 60)
+    hass.data[DOMAIN] = {"camera_entity_id": camera_entity_id, "update_interval": update_interval, "active": False}
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -46,6 +49,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         return {"result": result}
 
+    async def periodic_spaghetti_detection(now):
+        if hass.data[DOMAIN]["active"]:
+            await spaghetti_detection_handler(ServiceCall(DOMAIN, "predict", entry.data))
+
     hass.services.async_register(
         DOMAIN,
         "predict",
@@ -53,6 +60,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         schema=SPAGHETTI_DETECTION_SCHEMA,
         supports_response=SupportsResponse.ONLY
     )
+
+    async_track_time_interval(hass, periodic_spaghetti_detection, timedelta(seconds=update_interval))
 
     return True
 
