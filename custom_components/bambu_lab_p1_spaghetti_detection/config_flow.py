@@ -45,5 +45,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional("obico_ml_api_host", default="http://127.0.0.1:3333", description="Obico Addon Host address (including port)"): str,
                 vol.Optional("obico_ml_api_token", default="obico_api_secret", description="Obico Addon API Token"): str,
                 vol.Required("device_type", description="Device Type"): selector({"device": {"integration": integration_type}}),
+                vol.Required("printer_device", description="Printer to Monitor"): selector({"device": {"integration": integration_type}}),
             })
         )
