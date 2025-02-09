@@ -5,7 +5,9 @@
         "data": {
           "camera_entity": "Select Camera Entity",
           "update_interval": "Update Interval (seconds)",
-          "obico_ml_api_host": "Obico ML API Host"
+          "obico_ml_api_host": "Obico ML API Host",
+          "obico_ml_api_token": "Obico ML API Token",
+          "printer_device": "Select Printer Device (created from the Bambu Lab or Moonraker Addons)"
         }
       }
     }

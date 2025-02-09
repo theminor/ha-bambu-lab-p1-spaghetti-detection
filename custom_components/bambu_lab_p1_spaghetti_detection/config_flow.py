@@ -25,5 +25,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required("camera_entity"): selector({"entity": {"domain": "camera"}}),
                 vol.Optional("update_interval", default=60): vol.All(vol.Coerce(int), vol.Range(min=10)),
                 vol.Optional("obico_ml_api_host", default="http://127.0.0.1:3333"): str,
+                vol.Optional("obico_ml_api_token", default="obico_api_secret"): str,
+                vol.Required("printer_device"): selector({"device": {"integration": "bambu_lab"}}),
             })
         )
