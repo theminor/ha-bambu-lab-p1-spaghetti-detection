@@ -29,9 +29,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_select_device(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         if user_input is not None:
+            user_input["device_type"] = self.device_type
             return self.async_create_entry(title="Bambu Lab P1 - Spaghetti Detection", data=user_input)
 
-        # Set the device_type before showing the form
+        # Set the integration_type before showing the form
         if self.device_type == "Bambu Lab":
             integration_type = "bambu_lab"
         else:
@@ -44,7 +45,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional("update_interval", default=30, description="Update Interval (seconds)"): vol.All(vol.Coerce(int), vol.Range(min=5)),
                 vol.Optional("obico_ml_api_host", default="http://127.0.0.1:3333", description="Obico Addon Host address (including port)"): str,
                 vol.Optional("obico_ml_api_token", default="obico_api_secret", description="Obico Addon API Token"): str,
-                vol.Required("device_type", description="Device Type"): selector({"device": {"integration": integration_type}}),
                 vol.Required("printer_device", description="Printer to Monitor"): selector({"device": {"integration": integration_type}}),
             })
         )
