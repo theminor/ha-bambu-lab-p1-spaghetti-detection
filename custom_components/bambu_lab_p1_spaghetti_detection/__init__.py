@@ -27,7 +27,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     obico_ml_api_host = entry.data.get("obico_ml_api_host", "http://127.0.0.1:3333")
     obico_ml_api_token = entry.data.get("obico_ml_api_token", "obico_api_secret")
     printer_device = entry.data["printer_device"]
-    hass.data[DOMAIN] = {"camera_entity_id": camera_entity_id, "update_interval": update_interval, "active": False}
+    device_type = entry.data["device_type"]
+    hass.data[DOMAIN] = {"camera_entity_id": camera_entity_id, "update_interval": update_interval, "active": False, "device_type": device_type}
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

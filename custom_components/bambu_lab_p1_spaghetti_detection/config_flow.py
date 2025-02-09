@@ -7,7 +7,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import selector
-from homeassistant.helpers import device_registry as dr
 
 from custom_components.bambu_lab_p1_spaghetti_detection import DOMAIN
 
@@ -18,21 +17,33 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         if user_input is not None:
-            return self.async_create_entry(title="Bambu Lab P1 - Spaghetti Detection", data=user_input)
-
-        device_registry = dr.async_get(self.hass)
-        devices = [
-            (device.id, device.name) for device in device_registry.devices.values()
-            if any(self.hass.config_entries.async_get_entry(entry_id).domain in ["bambu_lab", "moonraker"] for entry_id in device.config_entries)
-        ]
+            self.device_type = user_input["device_type"]
+            return await self.async_step_select_device()
 
         return self.async_show_form(
             step_id="user",
+            data_schema=vol.Schema({
+                vol.Required("device_type", description="Device Type"): vol.In(["Bambu Lab", "Moonraker"]),
+            })
+        )
+
+    async def async_step_select_device(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        if user_input is not None:
+            return self.async_create_entry(title="Bambu Lab P1 - Spaghetti Detection", data=user_input)
+
+        # Set the device_type before showing the form
+        if self.device_type == "Bambu Lab":
+            integration_type = "bambu_lab"
+        else:
+            integration_type = "moonraker"
+
+        return self.async_show_form(
+            step_id="select_device",
             data_schema=vol.Schema({
                 vol.Required("camera_entity", description="Camera Entity"): selector({"entity": {"domain": "camera"}}),
                 vol.Optional("update_interval", default=30, description="Update Interval (seconds)"): vol.All(vol.Coerce(int), vol.Range(min=5)),
                 vol.Optional("obico_ml_api_host", default="http://127.0.0.1:3333", description="Obico Addon Host address (including port)"): str,
                 vol.Optional("obico_ml_api_token", default="obico_api_secret", description="Obico Addon API Token"): str,
-                vol.Required("printer_device", description="Printer to Monitor"): vol.In({device_id: device_name for device_id, device_name in devices}),
+                vol.Required("device_type", description="Device Type"): selector({"device": {"integration": integration_type}}),
             })
         )
