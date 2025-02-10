@@ -10,7 +10,7 @@ class FailureDetectionSensor(SensorEntity):
         self.hass = hass
         self._name = name
         self._entry_id = entry_id
-        self._state = "None"
+        self._state = "Unknown"
 
     @property
     def name(self):

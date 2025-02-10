@@ -22,6 +22,13 @@ NUMBER_TYPES: tuple[NumberEntityDescription, ...] = (
         native_max_value=10000000000000000,
         native_step=0.000000001
     ),
+    NumberEntityDescription(
+        key="normalized_p",
+        name="Confidence (Normalized P Value)",
+        native_min_value=-1000000000000000,
+        native_max_value=10000000000000000,
+        native_step=0.000000001
+    ),
 )
 
 async def async_setup_entry(hass, entry, async_add_entities):

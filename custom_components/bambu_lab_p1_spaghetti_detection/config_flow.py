@@ -42,7 +42,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="select_device",
             data_schema=vol.Schema({
                 vol.Required("camera_entity", description="Camera Entity"): selector({"entity": {"domain": "camera"}}),
-                vol.Optional("update_interval", default=30, description="Update Interval (seconds)"): vol.All(vol.Coerce(int), vol.Range(min=5)),
+                vol.Optional("update_interval", default=5, description="Update Interval (seconds)"): vol.All(vol.Coerce(int), vol.Range(min=2)),
                 vol.Optional("obico_ml_api_host", default="http://127.0.0.1:3333", description="Obico Addon Host address (including port)"): str,
                 vol.Optional("obico_ml_api_token", default="obico_api_secret", description="Obico Addon API Token"): str,
                 vol.Required("printer_device", description="Printer to Monitor"): selector({"device": {"integration": integration_type}}),
