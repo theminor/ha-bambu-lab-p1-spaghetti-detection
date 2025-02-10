@@ -1,3 +1,12 @@
+# WORKING CHANGES - TO DO
+- [ ] Test spaghetti detection
+- [ ] Give each entity a unique id so that multiple integrations can be added
+- [ ] Verify this is the pulled image and not our modified camera image with bounding boxes
+- [ ] Verify printer is actually printing - check the print state shoudl be "running" or "printing" etc.
+- [ ] Stop processing when printer stops and be sure to reset all the variables to 0
+- [ ] Handle the camera and test detection boxes on the image
+
+
 # Home Assistant Spaghetti Detection Integration
 
 Upgrade your 3D printer experience with the Home Assistant Spaghetti Detection Integration. This
