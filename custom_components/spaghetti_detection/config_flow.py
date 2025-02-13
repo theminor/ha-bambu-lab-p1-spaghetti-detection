@@ -7,8 +7,9 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import selector
+from homeassistant.helpers import device_registry as dr
 
-from custom_components.bambu_lab_p1_spaghetti_detection import DOMAIN
+from custom_components.spaghetti_detection import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +31,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_select_device(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         if user_input is not None:
             user_input["device_type"] = self.device_type
-            return self.async_create_entry(title="Bambu Lab P1 - Spaghetti Detection", data=user_input)
+
+            # Fetch the device name
+            device_registry = dr.async_get(self.hass)
+            device = device_registry.async_get(user_input["printer_device"])
+            device_name = device.name_by_user or device.name
+
+            user_input["device_name"] = device_name
+            return self.async_create_entry(title="Spaghetti Detection", data=user_input)
 
         # Set the integration_type before showing the form
         if self.device_type == "Bambu Lab":

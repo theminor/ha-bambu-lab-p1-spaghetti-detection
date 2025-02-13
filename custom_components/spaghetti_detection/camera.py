@@ -5,8 +5,9 @@ from io import BytesIO
 from . import DOMAIN
 
 async def async_setup_entry(hass, entry, async_add_entities):
+    device_name = hass.data[DOMAIN]["device_name"]
     camera_entity_id = hass.data[DOMAIN]["camera_entity_id"]
-    camera = SpaghettiDetectionCamera(hass, "Spaghetti Detection Camera", entry.entry_id, camera_entity_id)
+    camera = SpaghettiDetectionCamera(hass, f"{device_name} Spaghetti Detection Camera", entry.entry_id, camera_entity_id, device_name)
     hass.data[DOMAIN]["camera"] = camera
     async_add_entities([camera])
 
@@ -22,12 +23,13 @@ def draw_bounding_boxes(image, detections, rectangleColor=(255, 0, 0), rectangle
     return image
 
 class SpaghettiDetectionCamera(Camera):
-    def __init__(self, hass, name, entry_id, camera_entity_id):
+    def __init__(self, hass, name, entry_id, camera_entity_id, device_name):
         super().__init__()
         self.hass = hass
         self._name = name
         self._entry_id = entry_id
         self._camera_entity_id = camera_entity_id
+        self._device_name = device_name
         self._image_data = None
         self._detections = []
         self._detection_result = {}
@@ -42,7 +44,7 @@ class SpaghettiDetectionCamera(Camera):
 
     @property
     def unique_id(self):
-        return f"{self._entry_id}_spaghetti_detection_camera"
+        return f"{self._device_name}_spaghetti_detection_camera"
 
     async def async_camera_image(self):
         if self._image_data:

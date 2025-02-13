@@ -2,14 +2,16 @@ from homeassistant.components.switch import SwitchEntity
 from . import DOMAIN
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    switch = SpaghettiDetectionSwitch(hass, "Spaghetti Detection Active", entry.entry_id)
+    device_name = hass.data[DOMAIN]["device_name"]
+    switch = SpaghettiDetectionSwitch(hass, f"{device_name} Spaghetti Detection Active", entry.entry_id, device_name)
     async_add_entities([switch])
 
 class SpaghettiDetectionSwitch(SwitchEntity):
-    def __init__(self, hass, name, entry_id):
+    def __init__(self, hass, name, entry_id, device_name):
         self.hass = hass
         self._name = name
         self._entry_id = entry_id
+        self._device_name = device_name
         self._is_on = False
 
     @property
@@ -32,4 +34,4 @@ class SpaghettiDetectionSwitch(SwitchEntity):
 
     @property
     def unique_id(self):
-        return f"{self._entry_id}_spaghetti_detection_switch"
+        return f"{self._device_name}_spaghetti_detection_switch"
