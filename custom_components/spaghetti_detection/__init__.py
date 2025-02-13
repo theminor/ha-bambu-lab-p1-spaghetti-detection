@@ -4,7 +4,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_interval
 from datetime import timedelta
 import logging
-from .const import DOMAIN, THRESHOLD_LOW, THRESHOLD_HIGH
+from .const import DOMAIN, MAX_FRAME_NUM
+from .prediction import update_prediction_with_detections, is_failing, VISUALIZATION_THRESH
 
 LOGGER = logging.getLogger(__package__)
 
@@ -32,6 +33,89 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     rolling_mean_long = 0
     current_frame_number = 0
     lifetime_frame_number = 0
+
+
+
+    ################ from upload_print() from obico-server/backend/app/views/web_views.py
+    ################ and preprocess_timelapse() from obico-server/backend/app/tasks.py
+    ################ and detect_timelapse() from obico-server/backend/app/tasks.py
+    async def processImage(request):
+        if not hass.data[DOMAIN]["active"]:
+            return
+
+        # Get the image from the camera entity
+        camera = hass.data[DOMAIN]["camera"]
+        try:
+            image = await camera.async_camera_image()
+        except Exception as e:
+            LOGGER.error("Failed to get image from camera: %s", e)
+            return
+
+        # Encode the image to base64
+        try:
+            image_base64 = base64.b64encode(image).decode('utf-8')
+        except Exception as e:
+            LOGGER.error("Failed to encode image to base64: %s", e)
+            return
+
+        predictions = []
+        last_prediction = PrinterPrediction()  # TO DO - need to implement - see obico-server/backend/app/models/other_models.py
+        ### *** STOPPED REVIEW HERE *** ###
+
+        jpg_filenames = sorted(os.listdir(jpgs_dir))
+        for jpg_path in jpg_filenames:
+            jpg_abs_path = os.path.join(jpgs_dir, jpg_path)
+            with open(jpg_abs_path, 'rb') as pic:
+                pic_path = f'{_print.user.id}/{_print.id}/{jpg_path}'
+                internal_url, _ = save_file_obj(f'uploaded/{pic_path}', pic, settings.PICS_CONTAINER, _print.user.syndicate.name, long_term_storage=False)
+                req = requests.get(settings.ML_API_HOST + '/p/', params={'img': internal_url}, headers=ml_api_auth_headers(), verify=False)
+                req.raise_for_status()
+                detections = req.json()['detections']
+                update_prediction_with_detections(last_prediction, detections, _print.printer)
+                predictions.append(last_prediction)
+
+                if is_failing(last_prediction, 1, escalating_factor=1):
+                    _print.alerted_at = timezone.now()
+
+                last_prediction = copy.deepcopy(last_prediction)
+                detections_to_visualize = [d for d in detections if d[1] > VISUALIZATION_THRESH]
+                overlay_detections(Image.open(jpg_abs_path), detections_to_visualize).save(os.path.join(tagged_jpgs_dir, jpg_path), "JPEG")
+
+        predictions_json = serializers.serialize("json", predictions)
+        _, json_url = save_file_obj(f'private/{_print.id}_p.json', io.BytesIO(str.encode(predictions_json)), settings.TIMELAPSE_CONTAINER, _print.user.syndicate.name)
+
+        mp4_filename = f'{_print.id}_tagged.mp4'
+        output_mp4 = os.path.join(tmp_dir, mp4_filename)
+        subprocess.run(
+            f'ffmpeg -y -r 30 -pattern_type glob -i {tagged_jpgs_dir}/*.jpg -c:v libx264 -pix_fmt yuv420p -vf pad=ceil(iw/2)*2:ceil(ih/2)*2 {output_mp4}'.split(), check=True)
+        with open(output_mp4, 'rb') as mp4_file:
+            _, mp4_file_url = save_file_obj(f'private/{mp4_filename}', mp4_file, settings.TIMELAPSE_CONTAINER, _print.user.syndicate.name)
+
+        with open(os.path.join(jpgs_dir, jpg_filenames[-1]), 'rb') as poster_file:
+            _, poster_file_url = save_file_obj(f'private/{_print.id}_poster.jpg', poster_file, settings.TIMELAPSE_CONTAINER, _print.user.syndicate.name)
+
+        _print.tagged_video_url = mp4_file_url
+        _print.prediction_json_url = json_url
+        _print.poster_url = poster_file_url
+        _print.save(keep_deleted=True)
+
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+        send_timelapse_detection_done_email(_print)
+        delete_dir(f'uploaded/{_print.user.id}/{_print.id}/', settings.PICS_CONTAINER, long_term_storage=False)
+    ################
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     async def spaghetti_detection_handler(now):
         nonlocal ewm_mean, rolling_mean_short, rolling_mean_long, current_frame_number, lifetime_frame_number
